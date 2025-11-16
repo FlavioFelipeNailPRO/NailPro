@@ -1,5 +1,6 @@
 
 export interface AnalysisResult {
+  isNail: boolean;
   shape: string;
   shapeDescription: string;
   conditionAnalysis: string;

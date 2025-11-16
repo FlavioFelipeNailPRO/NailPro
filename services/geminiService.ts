@@ -7,6 +7,8 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const PROMPT_PT = `Você é um especialista em unhas de renome mundial, um "NailPro". Sua tarefa é analisar a imagem de uma unha fornecida e retornar uma análise detalhada e impecável. A unha na imagem tem uma das seguintes formas: Quadrada, Redonda, Oval, Amendoada, Stiletto, ou Bailarina (Coffin).
 
+Um primeiro passo crucial é determinar se a imagem realmente contém uma unha humana. Sua resposta DEVE incluir um campo booleano \`isNail\`. Defina-o como \`false\` se a imagem não mostrar uma unha de mão ou de pé humana clara e analisável. Se \`isNail\` for \`false\`, para todos os outros campos de texto, você deve retornar uma mensagem útil como 'Análise não é possível, pois a imagem não parece ser de uma unha.'
+
 Sua resposta DEVE ser um objeto JSON que corresponda ao schema fornecido.
 
 Para o campo 'shapeDescription', forneça uma descrição detalhada, sofisticada e profissional da forma identificada.
@@ -31,6 +33,8 @@ Este conteúdo deve ser prático e direcionado a profissionais que desejam alcan
 Analise a imagem e forneça a resposta JSON.`;
 
 const PROMPT_EN = `You are a world-renowned nail expert, a "NailPro". Your task is to analyze the provided nail image and return a flawless, detailed analysis. The nail in the image has one of the following shapes: Square, Round, Oval, Almond, Stiletto, or Ballerina (Coffin).
+
+A crucial first step is to determine if the image actually contains a human nail. Your response MUST include a boolean field \`isNail\`. Set this to \`false\` if the image does not show a clear, analyzable human fingernail or toenail. If \`isNail\` is \`false\`, for all other string fields, you must return a helpful message like 'Analysis not possible as the image does not appear to be a nail.'
 
 Your response MUST be a JSON object that matches the provided schema.
 
@@ -57,6 +61,8 @@ Analyze the image and provide the JSON response.`;
 
 const PROMPT_RU = `Вы — всемирно известный эксперт по ногтям, "NailPro". Ваша задача — проанализировать предоставленное изображение ногтя и вернуть безупречный, подробный анализ. Ноготь на изображении имеет одну из следующих форм: Квадрат, Круг, Овал, Миндаль, Стилет или Балерина (Пуанты).
 
+Ключевой первый шаг — определить, действительно ли на изображении есть человеческий ноготь. Ваш ответ ДОЛЖЕН включать булево поле \`isNail\`. Установите его в \`false\`, если на изображении нет четкого, поддающегося анализу человеческого ногтя на руке или ноге. Если \`isNail\` имеет значение \`false\`, для всех остальных строковых полей вы должны вернуть полезное сообщение, например, 'Анализ невозможен, так как изображение не похоже на ноготь.'
+
 Ваш ответ ДОЛЖЕН быть JSON-объектом, соответствующим предоставленной схеме.
 
 Для поля 'shapeDescription' предоставьте подробное, изысканное и профессиональное описание определенной формы.
@@ -81,6 +87,8 @@ const PROMPT_RU = `Вы — всемирно известный эксперт �
 Проанализируйте изображение и предоставьте JSON-ответ.`;
 
 const PROMPT_ES = `Eres un experto en uñas de renombre mundial, un "NailPro". Tu tarea es analizar la imagen de la uña proporcionada y devolver un análisis impecable y detallado. La uña en la imagen tiene una de las siguientes formas: Cuadrada, Redonda, Ovalada, Almendrada, Stiletto o Bailarina (Coffin).
+
+Un primer paso crucial es determinar si la imagen realmente contiene una uña humana. Tu respuesta DEBE incluir un campo booleano \`isNail\`. Establécelo en \`false\` si la imagen no muestra una uña de mano o de pie humana clara y analizable. Si \`isNail\` es \`false\`, para todos los demás campos de texto, debes devolver un mensaje útil como 'El análisis no es posible ya que la imagen no parece ser de una uña.'
 
 Tu respuesta DEBE ser un objeto JSON que coincida con el esquema proporcionado.
 
@@ -142,6 +150,7 @@ export const analyzeNailImage = async (base64ImageData: string, mimeType: string
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
+                        isNail: { type: Type.BOOLEAN },
                         shape: { type: Type.STRING },
                         shapeDescription: { type: Type.STRING },
                         conditionAnalysis: { type: Type.STRING },
@@ -150,7 +159,7 @@ export const analyzeNailImage = async (base64ImageData: string, mimeType: string
                         f1MoldApplication: { type: Type.STRING },
                         f1MoldSpecialization: { type: Type.STRING },
                     },
-                    required: ["shape", "shapeDescription", "conditionAnalysis", "improvementFeedback", "nailMeasurements", "f1MoldApplication", "f1MoldSpecialization"],
+                    required: ["isNail", "shape", "shapeDescription", "conditionAnalysis", "improvementFeedback", "nailMeasurements", "f1MoldApplication", "f1MoldSpecialization"],
                 },
                 temperature: 0.2,
             },
@@ -158,9 +167,17 @@ export const analyzeNailImage = async (base64ImageData: string, mimeType: string
 
         const jsonText = response.text;
         const result: AnalysisResult = JSON.parse(jsonText);
+        
+        if (result.isNail === false) {
+            throw new Error('NOT_A_NAIL');
+        }
+
         return result;
 
     } catch (error) {
+        if (error instanceof Error && error.message === 'NOT_A_NAIL') {
+            throw error;
+        }
         console.error('Error calling Gemini API:', error);
         throw new Error('Failed to get analysis from Gemini API.');
     }

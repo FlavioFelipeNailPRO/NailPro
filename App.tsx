@@ -60,7 +60,11 @@ const App: React.FC = () => {
       setAnalysis(result);
     } catch (err) {
       console.error("Analysis failed:", err);
-      setApiError(t('app.error.description'));
+      if (err instanceof Error && err.message === 'NOT_A_NAIL') {
+        setApiError(t('app.error.notANail'));
+      } else {
+        setApiError(t('app.error.description'));
+      }
     } finally {
       setIsLoading(false);
     }
