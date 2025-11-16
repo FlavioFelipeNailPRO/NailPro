@@ -1,0 +1,5 @@
+{
+  "name": "NailProMF1 Final",
+  "description": "An AI-powered SPA for professional nail analysis. Users upload a photo of a nail, and the app identifies the shape, analyzes its condition, and provides a detailed guide for applying F1 molds, all tailored to the specific nail.",
+  "requestFramePermissions": []
+}
